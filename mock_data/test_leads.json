@@ -1,0 +1,50 @@
+[
+  {
+    "scenario": "tier_1_hot_lead",
+    "description": "High intent enterprise prospect matching ICP perfectly",
+    "payload": {
+      "first_name": "Sarah",
+      "last_name": "Jenkins",
+      "work_email": "s.jenkins@cloudscale.io",
+      "phone": "+1-415-555-0199",
+      "job_title": "VP of Revenue Operations",
+      "company_name": "CloudScale Systems",
+      "company_website": "https://cloudscale.io",
+      "company_size": "250-500",
+      "message": "We are looking to overhaul our manual lead routing and automate CRM enrichment for our 25 sales reps. Budget approved for Q4.",
+      "lead_source": "Website Demo Form"
+    }
+  },
+  {
+    "scenario": "tier_2_warm_lead",
+    "description": "Mid-market prospect with interest but needing nurture/qualification",
+    "payload": {
+      "first_name": "David",
+      "last_name": "Miller",
+      "work_email": "david.m@growthdigital.co",
+      "phone": "+1-312-555-0142",
+      "job_title": "Marketing Manager",
+      "company_name": "Growth Digital Agency",
+      "company_website": "https://growthdigital.co",
+      "company_size": "20-50",
+      "message": "Evaluating automation tools to connect our forms to CRM. Looking for case studies and pricing details.",
+      "lead_source": "Inbound Whitepaper Download"
+    }
+  },
+  {
+    "scenario": "tier_3_disqualified",
+    "description": "Bad fit / Personal email / No buying authority",
+    "payload": {
+      "first_name": "Alex",
+      "last_name": "K",
+      "work_email": "alexk994@gmail.com",
+      "phone": "",
+      "job_title": "Student / Intern",
+      "company_name": "Freelance",
+      "company_website": "",
+      "company_size": "1-5",
+      "message": "Do you offer free access or student discounts for educational projects?",
+      "lead_source": "General Contact Us"
+    }
+  }
+]

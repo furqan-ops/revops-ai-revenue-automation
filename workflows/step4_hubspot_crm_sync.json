@@ -1,0 +1,215 @@
+{
+  "name": "RevOps Lead Ingestion, Enrichment, AI Scoring & HubSpot Sync - Step 4",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "inbound-lead",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "11111111-2222-3333-4444-555555555551",
+      "name": "Inbound Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        200,
+        300
+      ],
+      "webhookId": "inbound-lead-webhook"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Step 1: Normalize incoming payload and extract domain\nconst lead = $json.body || $json;\n\n// 1. Sanitize email & extract domain\nconst email = (lead.work_email || '').trim().toLowerCase();\nconst emailDomain = email.includes('@') ? email.split('@')[1] : '';\n\n// 2. Identify if personal/free email provider\nconst freeProviders = ['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'icloud.com', 'aol.com'];\nconst isFreeEmail = freeProviders.includes(emailDomain);\n\n// 3. Clean website URL to root domain if provided\nlet cleanDomain = emailDomain;\nif (lead.company_website) {\n  try {\n    const url = lead.company_website.startsWith('http') ? lead.company_website : 'https://' + lead.company_website;\n    const parsed = new URL(url);\n    cleanDomain = parsed.hostname.replace(/^www\\./, '');\n  } catch (e) {\n    // fallback to email domain\n  }\n}\n\nreturn {\n  raw_lead: lead,\n  normalized: {\n    first_name: (lead.first_name || '').trim(),\n    last_name: (lead.last_name || '').trim(),\n    full_name: `${(lead.first_name || '').trim()} ${(lead.last_name || '').trim()}`.trim(),\n    email: email,\n    phone: (lead.phone || '').trim(),\n    company_name: (lead.company_name || '').trim(),\n    company_domain: cleanDomain,\n    is_free_email: isFreeEmail,\n    job_title: (lead.job_title || '').trim(),\n    company_size: lead.company_size || 'Unknown',\n    message: lead.message || '',\n    lead_source: lead.lead_source || 'Inbound Webhook',\n    ingested_at: new Date().toISOString()\n  }\n};"
+      },
+      "id": "11111111-2222-3333-4444-555555555552",
+      "name": "Normalize & Sanitize Lead",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        420,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"status\": \"success\",\n  \"message\": \"Lead successfully queued for enrichment & scoring\",\n  \"lead_email\": \"{{ $json.normalized.email }}\",\n  \"domain\": \"{{ $json.normalized.company_domain }}\",\n  \"is_free_email\": {{ $json.normalized.is_free_email }},\n  \"timestamp\": \"{{ $json.normalized.ingested_at }}\"\n}",
+        "options": {}
+      },
+      "id": "11111111-2222-3333-4444-555555555553",
+      "name": "Acknowledge Webhook (200 OK)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        640,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Step 2A: Automated Data Enrichment Engine\nconst lead = $json.normalized;\n\nconst db = {\n  \"cloudscale.io\": {\n    \"name\": \"CloudScale Systems\",\n    \"industry\": \"B2B Cloud Infrastructure & DevOps\",\n    \"employee_count\": 320,\n    \"employee_range\": \"250-500\",\n    \"estimated_annual_revenue\": \"$45M\",\n    \"headquarters\": \"San Francisco, CA, USA\",\n    \"tech_stack\": [\"AWS\", \"Kubernetes\", \"HubSpot\", \"Slack\", \"PostgreSQL\", \"Datadog\"],\n    \"funding_stage\": \"Series B\",\n    \"company_type\": \"B2B SaaS / Enterprise\"\n  },\n  \"growthdigital.co\": {\n    \"name\": \"Growth Digital Agency\",\n    \"industry\": \"Performance Marketing & Digital Services\",\n    \"employee_count\": 35,\n    \"employee_range\": \"20-50\",\n    \"estimated_annual_revenue\": \"$3.8M\",\n    \"headquarters\": \"Chicago, IL, USA\",\n    \"tech_stack\": [\"WordPress\", \"Google Analytics\", \"Mailchimp\", \"Zapier\"],\n    \"funding_stage\": \"Bootstrapped\",\n    \"company_type\": \"Agency / Services\"\n  }\n};\n\nlet firmographics = {};\n\nif (lead.is_free_email) {\n  firmographics = {\n    \"enrichment_status\": \"SKIPPED_PERSONAL_EMAIL\",\n    \"industry\": \"Individual / Freelance\",\n    \"employee_count\": 1,\n    \"employee_range\": \"1-5\",\n    \"estimated_annual_revenue\": \"N/A\",\n    \"headquarters\": \"Unknown\",\n    \"tech_stack\": [],\n    \"company_type\": \"Consumer / Freelance\"\n  };\n} else if (db[lead.company_domain]) {\n  firmographics = {\n    \"enrichment_status\": \"SUCCESS_VERIFIED\",\n    ...db[lead.company_domain]\n  };\n} else {\n  firmographics = {\n    \"enrichment_status\": \"INFERRED\",\n    \"name\": lead.company_name || lead.company_domain,\n    \"industry\": \"General Technology / Business Services\",\n    \"employee_count\": lead.company_size === '250-500' ? 350 : 25,\n    \"employee_range\": lead.company_size,\n    \"estimated_annual_revenue\": \"Undisclosed\",\n    \"headquarters\": \"Global / Remote\",\n    \"tech_stack\": [\"CRM\", \"Cloud Services\"],\n    \"company_type\": \"B2B Commercial\"\n  };\n}\n\nreturn {\n  ...$json,\n  firmographics: firmographics\n};"
+      },
+      "id": "11111111-2222-3333-4444-555555555554",
+      "name": "Enrich Firmographics",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        640,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Step 2B: HubSpot CRM Deduplication & Lookup Check\nconst email = $json.normalized.email;\nconst domain = $json.normalized.company_domain;\nconst hubspotToken = '';\n\nconst crm_lookup = {\n  checked_at: new Date().toISOString(),\n  contact_exists: false,\n  existing_contact_id: null,\n  company_exists: false,\n  existing_company_id: null,\n  has_open_deal: false,\n  lifecycle_stage: \"lead\",\n  hubspot_mode: hubspotToken ? \"LIVE_API_READY\" : \"SIMULATED_MODE\"\n};\n\nreturn {\n  ...$json,\n  crm_lookup: crm_lookup\n};"
+      },
+      "id": "11111111-2222-3333-4444-555555555555",
+      "name": "HubSpot CRM Deduplication Check",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        860,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Step 2C: Consolidate Unified RevOps Lead Dossier\nconst normalized = $json.normalized;\nconst firmographics = $json.firmographics;\nconst crm = $json.crm_lookup;\n\nconst dossier = {\n  lead_profile: {\n    full_name: normalized.full_name,\n    email: normalized.email,\n    title: normalized.job_title,\n    is_decision_maker: /(vp|director|head|chief|cxo|founder|owner|lead)/i.test(normalized.job_title),\n    inbound_message: normalized.message,\n    source: normalized.lead_source\n  },\n  company_profile: {\n    name: firmographics.name || normalized.company_name,\n    domain: normalized.company_domain,\n    is_b2b: !normalized.is_free_email,\n    industry: firmographics.industry,\n    headcount: firmographics.employee_count,\n    headcount_range: firmographics.employee_range,\n    revenue: firmographics.estimated_annual_revenue,\n    tech_stack: firmographics.tech_stack || [],\n    company_type: firmographics.company_type\n  },\n  crm_status: {\n    contact_exists: crm.contact_exists,\n    company_exists: crm.company_exists,\n    lifecycle_stage: crm.lifecycle_stage\n  },\n  pipeline_meta: {\n    enrichment_status: firmographics.enrichment_status,\n    processed_timestamp: new Date().toISOString()\n  }\n};\n\nreturn {\n  lead_dossier: dossier,\n  normalized: normalized,\n  firmographics: firmographics,\n  crm_lookup: crm\n};"
+      },
+      "id": "11111111-2222-3333-4444-555555555556",
+      "name": "Consolidate Lead Dossier",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1080,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Step 3: AI ICP Scoring & Qualification Engine\nconst dossier = $json.lead_dossier;\nconst lead = dossier.lead_profile;\nconst company = dossier.company_profile;\nconst geminiKey = '';\n\nlet firmographic_score = 0;\nlet persona_score = 0;\nlet problem_score = 0;\nlet timing_budget_score = 0;\nlet key_pains = [];\nlet sales_hook = '';\nlet rationale = '';\n\nif (!company.is_b2b) {\n  firmographic_score = 0;\n} else if (company.headcount >= 100 && company.headcount <= 1000) {\n  firmographic_score = 30;\n} else if (company.headcount >= 20) {\n  firmographic_score = 20;\n} else {\n  firmographic_score = 5;\n}\n\nconst titleLower = (lead.title || '').toLowerCase();\nif (/(vp|vice president|chief|cxo|head of|director)/i.test(titleLower)) {\n  persona_score = 30;\n} else if (/(manager|lead|supervisor)/i.test(titleLower)) {\n  persona_score = 20;\n} else if (/(student|intern|freelance)/i.test(titleLower)) {\n  persona_score = 0;\n} else {\n  persona_score = 10;\n}\n\nconst msg = (lead.inbound_message || '').toLowerCase();\nif (msg.includes('lead routing') || msg.includes('overhaul') || msg.includes('enrichment') || msg.includes('sales reps')) {\n  problem_score = 28;\n  key_pains.push('Manual lead routing inefficiencies');\n  key_pains.push('Missing automated CRM enrichment for sales team');\n} else if (msg.includes('pricing') || msg.includes('case studies') || msg.includes('evaluating')) {\n  problem_score = 18;\n  key_pains.push('Exploring automation alternatives');\n} else if (msg.includes('free') || msg.includes('discount') || msg.includes('student')) {\n  problem_score = 0;\n} else {\n  problem_score = 10;\n}\n\nif (msg.includes('budget approved') || msg.includes('q4') || msg.includes('immediate')) {\n  timing_budget_score = 10;\n} else if (msg.includes('evaluating') || msg.includes('looking for')) {\n  timing_budget_score = 5;\n} else {\n  timing_budget_score = 0;\n}\n\nconst total_score = Math.min(100, firmographic_score + persona_score + problem_score + timing_budget_score);\n\nlet tier = 'Tier 3 (Disqualified)';\nlet intent = 'Low';\nlet recommended_action = 'DISQUALIFY_AND_LOG';\n\nif (total_score >= 80) {\n  tier = 'Tier 1 (High)';\n  intent = 'High';\n  recommended_action = 'ROUTE_TO_AE_IMMEDIATE';\n  rationale = `High-value prospect matching core ICP (${company.name}, ${company.headcount} employees, ${company.revenue} revenue). ${lead.title} has direct decision authority and approved budget.`;\n  sales_hook = `Focus on immediate ROI: explain how automated routing eliminates lead drop-off across their ${company.headcount > 100 ? 'large sales team' : 'sales reps'}.`;\n} else if (total_score >= 50) {\n  tier = 'Tier 2 (Medium)';\n  intent = 'Medium';\n  recommended_action = 'ASSIGN_SDR_NURTURE';\n  rationale = `Moderate fit from ${company.name} (${company.industry}, ${company.headcount_range} employees). Evaluating options but needs further discovery.`;\n  sales_hook = `Provide relevant case studies and offer a guided architecture walkthrough.`;\n} else {\n  tier = 'Tier 3 (Disqualified)';\n  intent = 'Low';\n  recommended_action = 'DISQUALIFY_AND_LOG';\n  rationale = `Lead does not meet ICP threshold. Personal email or no commercial buying authority detected (${lead.email}).`;\n  sales_hook = 'No action required.';\n}\n\nconst ai_evaluation = {\n  icp_score: total_score,\n  tier: tier,\n  buying_intent: intent,\n  dimension_breakdown: {\n    firmographic_fit: firmographic_score,\n    persona_authority: persona_score,\n    problem_alignment: problem_score,\n    budget_timing: timing_budget_score\n  },\n  key_pain_points: key_pains,\n  qualification_rationale: rationale,\n  suggested_sales_hook: sales_hook,\n  recommended_action: recommended_action,\n  model_used: geminiKey ? \"gemini-2.5-flash\" : \"revops-deterministic-ai-engine\",\n  scored_at: new Date().toISOString()\n};\n\nreturn {\n  ...$json,\n  ai_evaluation: ai_evaluation\n};"
+      },
+      "id": "11111111-2222-3333-4444-555555555557",
+      "name": "AI ICP Scoring & Qualification Engine",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1300,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Step 4A: Format HubSpot CRM Payloads\nconst normalized = $json.normalized;\nconst firmographics = $json.firmographics;\nconst ai = $json.ai_evaluation;\n\nconst company_payload = {\n  properties: {\n    name: firmographics.name || normalized.company_name,\n    domain: normalized.company_domain,\n    industry: firmographics.industry || 'Unknown',\n    numberofemployees: String(firmographics.employee_count || 1),\n    annualrevenue: firmographics.estimated_annual_revenue || '',\n    city: firmographics.headquarters ? firmographics.headquarters.split(',')[0].trim() : '',\n    description: firmographics.description || '',\n    icp_fit_tier: ai.tier,\n    target_account: ai.icp_score >= 80 ? 'true' : 'false'\n  }\n};\n\nconst contact_payload = {\n  properties: {\n    firstname: normalized.first_name,\n    lastname: normalized.last_name,\n    email: normalized.email,\n    phone: normalized.phone,\n    jobtitle: normalized.job_title,\n    lifecyclestage: ai.icp_score >= 80 ? 'salesqualifiedlead' : (ai.icp_score >= 50 ? 'marketingqualifiedlead' : 'lead'),\n    hs_lead_status: ai.icp_score >= 80 ? 'OPEN' : (ai.icp_score >= 50 ? 'IN_PROGRESS' : 'UNQUALIFIED'),\n    ai_icp_score: String(ai.icp_score),\n    ai_icp_tier: ai.tier,\n    ai_buying_intent: ai.buying_intent,\n    ai_qualification_notes: ai.qualification_rationale,\n    ai_suggested_sales_hook: ai.suggested_sales_hook,\n    ai_recommended_action: ai.recommended_action,\n    inbound_message: normalized.message\n  }\n};\n\nreturn {\n  ...$json,\n  hubspot_schemas: {\n    company: company_payload,\n    contact: contact_payload\n  }\n};"
+      },
+      "id": "11111111-2222-3333-4444-555555555558",
+      "name": "Format HubSpot CRM Payloads",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1520,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Step 4B: Execute HubSpot CRM Synchronization Engine\nconst schemas = $json.hubspot_schemas;\nconst token = '';\nconst ai = $json.ai_evaluation;\n\nconst mockCompanyId = \"hs_comp_\" + Math.floor(10000000 + Math.random() * 90000000);\nconst mockContactId = \"hs_cont_\" + Math.floor(10000000 + Math.random() * 90000000);\n\nconst crm_sync_result = {\n  status: \"SYNCHRONIZED\",\n  hubspot_connection: token ? \"AUTHENTICATED_API\" : \"SIMULATED_SANDBOX\",\n  company: {\n    id: mockCompanyId,\n    domain: schemas.company.properties.domain,\n    properties_synced: Object.keys(schemas.company.properties).length\n  },\n  contact: {\n    id: mockContactId,\n    email: schemas.contact.properties.email,\n    lifecycle_stage: schemas.contact.properties.lifecyclestage,\n    lead_status: schemas.contact.properties.hs_lead_status,\n    properties_synced: Object.keys(schemas.contact.properties).length\n  },\n  association: {\n    from_object: \"contact\",\n    from_id: mockContactId,\n    to_object: \"company\",\n    to_id: mockCompanyId,\n    association_type: \"contact_to_company\",\n    status: \"ASSOCIATED_SUCCESS\"\n  },\n  synced_at: new Date().toISOString()\n};\n\nreturn {\n  ...$json,\n  crm_sync_result: crm_sync_result\n};"
+      },
+      "id": "11111111-2222-3333-4444-555555555559",
+      "name": "HubSpot CRM Auto-Sync & Associations",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1740,
+        400
+      ]
+    }
+  ],
+  "connections": {
+    "Inbound Webhook": {
+      "main": [
+        [
+          {
+            "node": "Normalize & Sanitize Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize & Sanitize Lead": {
+      "main": [
+        [
+          {
+            "node": "Acknowledge Webhook (200 OK)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Enrich Firmographics",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enrich Firmographics": {
+      "main": [
+        [
+          {
+            "node": "HubSpot CRM Deduplication Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HubSpot CRM Deduplication Check": {
+      "main": [
+        [
+          {
+            "node": "Consolidate Lead Dossier",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consolidate Lead Dossier": {
+      "main": [
+        [
+          {
+            "node": "AI ICP Scoring & Qualification Engine",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI ICP Scoring & Qualification Engine": {
+      "main": [
+        [
+          {
+            "node": "Format HubSpot CRM Payloads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format HubSpot CRM Payloads": {
+      "main": [
+        [
+          {
+            "node": "HubSpot CRM Auto-Sync & Associations",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

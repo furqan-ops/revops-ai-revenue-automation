@@ -1,0 +1,26 @@
+{
+  "cloudscale.io": {
+    "name": "CloudScale Systems",
+    "domain": "cloudscale.io",
+    "industry": "B2B Cloud Infrastructure & DevOps",
+    "employee_count": 320,
+    "employee_range": "250-500",
+    "estimated_annual_revenue": "$45M",
+    "headquarters": "San Francisco, CA, USA",
+    "tech_stack": ["AWS", "Kubernetes", "HubSpot", "Slack", "PostgreSQL", "Datadog"],
+    "funding_stage": "Series B",
+    "description": "Enterprise cloud infrastructure scaling and cost optimization platform for high-growth engineering teams."
+  },
+  "growthdigital.co": {
+    "name": "Growth Digital Agency",
+    "domain": "growthdigital.co",
+    "industry": "Performance Marketing & Digital Services",
+    "employee_count": 35,
+    "employee_range": "20-50",
+    "estimated_annual_revenue": "$3.8M",
+    "headquarters": "Chicago, IL, USA",
+    "tech_stack": ["WordPress", "Google Analytics", "Mailchimp", "Zapier"],
+    "funding_stage": "Bootstrapped",
+    "description": "Boutique digital marketing and acquisition agency serving mid-market retailers."
+  }
+}

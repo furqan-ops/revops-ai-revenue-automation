@@ -1,0 +1,77 @@
+{
+  "name": "RevOps Lead Ingestion - Step 1",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "inbound-lead",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "11111111-2222-3333-4444-555555555551",
+      "name": "Inbound Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        200,
+        300
+      ],
+      "webhookId": "inbound-lead-webhook"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Step 1: Normalize incoming payload and extract domain\nconst lead = $json.body || $json;\n\n// 1. Sanitize email & extract domain\nconst email = (lead.work_email || '').trim().toLowerCase();\nconst emailDomain = email.includes('@') ? email.split('@')[1] : '';\n\n// 2. Identify if personal/free email provider\nconst freeProviders = ['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'icloud.com', 'aol.com'];\nconst isFreeEmail = freeProviders.includes(emailDomain);\n\n// 3. Clean website URL to root domain if provided\nlet cleanDomain = emailDomain;\nif (lead.company_website) {\n  try {\n    const url = lead.company_website.startsWith('http') ? lead.company_website : 'https://' + lead.company_website;\n    const parsed = new URL(url);\n    cleanDomain = parsed.hostname.replace(/^www\\./, '');\n  } catch (e) {\n    // fallback to email domain\n  }\n}\n\nreturn {\n  raw_lead: lead,\n  normalized: {\n    first_name: (lead.first_name || '').trim(),\n    last_name: (lead.last_name || '').trim(),\n    full_name: `${(lead.first_name || '').trim()} ${(lead.last_name || '').trim()}`.trim(),\n    email: email,\n    phone: (lead.phone || '').trim(),\n    company_name: (lead.company_name || '').trim(),\n    company_domain: cleanDomain,\n    is_free_email: isFreeEmail,\n    job_title: (lead.job_title || '').trim(),\n    company_size: lead.company_size || 'Unknown',\n    message: lead.message || '',\n    lead_source: lead.lead_source || 'Inbound Webhook',\n    ingested_at: new Date().toISOString()\n  }\n};"
+      },
+      "id": "11111111-2222-3333-4444-555555555552",
+      "name": "Normalize & Sanitize Lead",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        420,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"status\": \"success\",\n  \"message\": \"Lead successfully queued for enrichment & scoring\",\n  \"lead_email\": \"{{ $json.normalized.email }}\",\n  \"domain\": \"{{ $json.normalized.company_domain }}\",\n  \"is_free_email\": {{ $json.normalized.is_free_email }},\n  \"timestamp\": \"{{ $json.normalized.ingested_at }}\"\n}",
+        "options": {}
+      },
+      "id": "11111111-2222-3333-4444-555555555553",
+      "name": "Acknowledge Webhook (200 OK)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        640,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Inbound Webhook": {
+      "main": [
+        [
+          {
+            "node": "Normalize & Sanitize Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize & Sanitize Lead": {
+      "main": [
+        [
+          {
+            "node": "Acknowledge Webhook (200 OK)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
