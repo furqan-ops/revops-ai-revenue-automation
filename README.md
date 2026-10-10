@@ -77,7 +77,28 @@ The AI engine evaluates every inbound dossier against four quantitative revenue 
 
 ---
 
-## 🚀 How to Run & Demo This Project
+## 🚀 Live Demo & Deployment
+
+### 1. Interactive Streamlit Workspace (Local / Streamlit Cloud)
+To run the rule-based lead scoring and routing dashboard:
+```bash
+pip install -r requirements.txt
+streamlit run app.py
+```
+
+### 2. Next.js Dashboard on Vercel
+The repository includes a modern Next.js dashboard located in `lead-scoring-dashboard-design/`.
+To deploy on Vercel:
+1. Connect this GitHub repository (`revops-ai-revenue-automation`) to Vercel.
+2. In **Project Settings > General > Root Directory**, select:
+   ```text
+   lead-scoring-dashboard-design
+   ```
+3. Deploy! Vercel automatically detects Next.js and builds the web application.
+
+---
+
+## 🛠️ How to Run the n8n Workflow
 
 ### 1. Prerequisites
 * **Docker & n8n** running locally (`http://localhost:5678`)

@@ -1,0 +1,226 @@
+================================================================================
+STRICT CODE-GENERATED BASELINE OUTPUTS FROM BACKEND_SCORING.PY / APP.PY
+================================================================================
+Generated Command: python generate_strict_baseline.py
+Generation Date: October 8, 2026
+Python Runtime: 3.14.7 (tags/v3.14.7:823f032, Aug  5 2026, 10:51:32) [MSC v.1944 64 bit (AMD64)]
+================================================================================
+
+SCENARIO 1: TIER_1_HOT_LEAD
+------------------------------------------------------------
+Contact Input: Sarah Jenkins | Email: s.jenkins@cloudscale.io | Title: VP of Revenue Operations
+Company Input: CloudScale Systems | Size: 250-500 | Website: https://cloudscale.io
+Inbound Message Text:
+"We are looking to overhaul our manual lead routing and automate CRM enrichment for our 25 sales reps. Budget approved for Q4."
+
+DIMENSION EVALUATION STATUS & EXACT CODE MATCH CONDITIONS:
+  Dimension 1 (Firmographic): Status=COMPUTED | Score=30/30
+    Code Condition: elif enriched.get('employee_count', 0) >= 100: matched True (320 >= 100) -> sets f_score = 30
+  Dimension 2 (Authority):    Status=COMPUTED | Score=30/30
+    Code Condition: if any(t in title_lower for t in ['vp', 'vice president', 'chief', 'director', 'head']): matched True (first matched keyword: 'vp') -> sets a_score = 30
+  Dimension 3 (Problem):      Status=COMPUTED | Score=28/30
+    Code Condition: if any(k in msg_lower for k in ['lead routing', 'overhaul', 'sales reps', 'enrichment']): matched True (first matched keyword: 'lead routing') -> sets p_score = 28
+  Dimension 4 (Budget):       Status=COMPUTED | Score=10/10
+    Code Condition: if any(b in msg_lower for b in ['budget approved', 'q4', 'immediate']): matched True (first matched keyword: 'budget approved') -> sets b_score = 10
+
+RENDERED SCORING & PIPELINE VALUES:
+  Calculated ICP Score: 98/100
+  Assigned Tier: Tier 1 (High)
+  RevOps Route Action: ROUTE_TO_AE_IMMEDIATE
+  Pipeline Deal Value: $38,400 ARR
+  AI Qualification Rationale: High-value prospect matching core ICP (CloudScale Systems, 320 employees). VP of Revenue Operations has direct decision authority and approved budget.
+  Suggested First-Call Approach: "Focus on immediate ROI: explain how automated routing eliminates lead drop-off across their sales reps."
+
+NOTIFICATION PLAIN TEXT OUTPUT:
+  Slack Alert Text:
+#sales-inbound-leads
+Inbound Router Bot · just now
+[ALERT] New Tier 1 (High) lead: Sarah Jenkins at CloudScale Systems
+Score: 98/100 · Role: VP of Revenue Operations
+Projected ARR: $38,400 ARR · Assigned AE: Alex Vance (Round-Robin)
+"Focus on immediate ROI: explain how automated routing eliminates lead drop-off across their sales reps."
+View deal in HubSpot CRM (#hs_deal_894129)
+
+HUBSPOT CRM V3 PAYLOADS (Copied from code output):
+  Contact Payload:
+{
+  "firstname": "Sarah",
+  "lastname": "Jenkins",
+  "email": "s.jenkins@cloudscale.io",
+  "jobtitle": "VP of Revenue Operations",
+  "lifecyclestage": "salesqualifiedlead",
+  "hs_lead_status": "OPEN",
+  "ai_icp_score": 98,
+  "ai_icp_tier": "Tier 1 (High)",
+  "ai_qualification_notes": "High-value prospect matching core ICP (CloudScale Systems, 320 employees). VP of Revenue Operations has direct decision authority and approved budget."
+}
+  Company Payload:
+{
+  "name": "CloudScale Systems",
+  "domain": "cloudscale.io",
+  "industry": "B2B Cloud Infrastructure & DevOps",
+  "numberofemployees": "320",
+  "annualrevenue": "$45M",
+  "icp_fit_tier": "Tier 1 (High)",
+  "target_account": "true"
+}
+
+Enriched Data Object:
+{
+  "name": "CloudScale Systems",
+  "domain": "cloudscale.io",
+  "industry": "B2B Cloud Infrastructure & DevOps",
+  "employee_count": 320,
+  "employee_range": "250-500",
+  "estimated_annual_revenue": "$45M",
+  "headquarters": "San Francisco, CA, USA",
+  "tech_stack": [
+    "AWS",
+    "Kubernetes",
+    "HubSpot",
+    "Slack",
+    "PostgreSQL",
+    "Datadog"
+  ],
+  "funding_stage": "Series B",
+  "description": "Enterprise cloud infrastructure scaling and cost optimization platform for high-growth engineering teams."
+}
+================================================================================
+
+SCENARIO 2: TIER_2_WARM_LEAD
+------------------------------------------------------------
+Contact Input: David Miller | Email: david.m@growthdigital.co | Title: Marketing Manager
+Company Input: Growth Digital Agency | Size: 20-50 | Website: https://growthdigital.co
+Inbound Message Text:
+"Evaluating automation tools to connect our forms to CRM. Looking for case studies and pricing details."
+
+DIMENSION EVALUATION STATUS & EXACT CODE MATCH CONDITIONS:
+  Dimension 1 (Firmographic): Status=COMPUTED | Score=20/30
+    Code Condition: elif enriched.get('employee_count', 0) >= 20: matched True (35 >= 20) -> sets f_score = 20
+  Dimension 2 (Authority):    Status=COMPUTED | Score=20/30
+    Code Condition: elif any(t in title_lower for t in ['manager', 'lead']): matched True (first matched keyword: 'manager') -> sets a_score = 20
+  Dimension 3 (Problem):      Status=COMPUTED | Score=18/30
+    Code Condition: elif any(k in msg_lower for k in ['evaluating', 'pricing', 'case studies']): matched True (first matched keyword: 'evaluating') -> sets p_score = 18
+  Dimension 4 (Budget):       Status=COMPUTED | Score=5/10
+    Code Condition: elif 'evaluating' in msg_lower: matched True (matched keyword: 'evaluating') -> sets b_score = 5
+
+RENDERED SCORING & PIPELINE VALUES:
+  Calculated ICP Score: 63/100
+  Assigned Tier: Tier 2 (Medium)
+  RevOps Route Action: ASSIGN_SDR_NURTURE
+  Pipeline Deal Value: $0 (In Nurture)
+  AI Qualification Rationale: Moderate fit from Growth Digital Agency (Performance Marketing & Digital Services, 20-50 employees). Evaluating options and fits MQL criteria.
+  Suggested First-Call Approach: "Provide relevant B2B case studies and offer a guided architecture walkthrough."
+
+NOTIFICATION PLAIN TEXT OUTPUT:
+  SDR Queue Text:
+[MQL Queue] Lead routed to SDR 24h follow-up queue. Contact enrolled in educational nurture sequence.
+
+HUBSPOT CRM V3 PAYLOADS (Copied from code output):
+  Contact Payload:
+{
+  "firstname": "David",
+  "lastname": "Miller",
+  "email": "david.m@growthdigital.co",
+  "jobtitle": "Marketing Manager",
+  "lifecyclestage": "marketingqualifiedlead",
+  "hs_lead_status": "IN_PROGRESS",
+  "ai_icp_score": 63,
+  "ai_icp_tier": "Tier 2 (Medium)",
+  "ai_qualification_notes": "Moderate fit from Growth Digital Agency (Performance Marketing & Digital Services, 20-50 employees). Evaluating options and fits MQL criteria."
+}
+  Company Payload:
+{
+  "name": "Growth Digital Agency",
+  "domain": "growthdigital.co",
+  "industry": "Performance Marketing & Digital Services",
+  "numberofemployees": "35",
+  "annualrevenue": "$3.8M",
+  "icp_fit_tier": "Tier 2 (Medium)",
+  "target_account": "false"
+}
+
+Enriched Data Object:
+{
+  "name": "Growth Digital Agency",
+  "domain": "growthdigital.co",
+  "industry": "Performance Marketing & Digital Services",
+  "employee_count": 35,
+  "employee_range": "20-50",
+  "estimated_annual_revenue": "$3.8M",
+  "headquarters": "Chicago, IL, USA",
+  "tech_stack": [
+    "WordPress",
+    "Google Analytics",
+    "Mailchimp",
+    "Zapier"
+  ],
+  "funding_stage": "Bootstrapped",
+  "description": "Boutique digital marketing and acquisition agency serving mid-market retailers."
+}
+================================================================================
+
+SCENARIO 3: TIER_3_DISQUALIFIED
+------------------------------------------------------------
+Contact Input: Alex K | Email: alexk994@gmail.com | Title: Student / Intern
+Company Input: Freelance | Size: 1-5 | Website: 
+Inbound Message Text:
+"Do you offer free access or student discounts for educational projects?"
+
+DIMENSION EVALUATION STATUS & EXACT CODE MATCH CONDITIONS:
+  Dimension 1 (Firmographic): Status=SHORT_CIRCUIT | Score=0/30
+    Code Condition: if is_free: matched True -> sets f_score = 0 (short-circuits subsequent employee_count checks: '>= 100', '>= 20', 'else: 5' are skipped)
+  Dimension 2 (Authority):    Status=COMPUTED | Score=0/30
+    Code Condition: elif any(t in title_lower for t in ['student', 'intern']): matched True (first matched keyword: 'student') -> sets a_score = 0
+  Dimension 3 (Problem):      Status=COMPUTED | Score=0/30
+    Code Condition: elif any(k in msg_lower for k in ['free', 'student', 'discount']): matched True (first matched keyword: 'free') -> sets p_score = 0
+  Dimension 4 (Budget):       Status=COMPUTED | Score=0/10
+    Code Condition: else: matched True -> sets b_score = 0
+
+RENDERED SCORING & PIPELINE VALUES:
+  Calculated ICP Score: 0/100
+  Assigned Tier: Tier 3 (Disqualified)
+  RevOps Route Action: DISQUALIFY_AND_LOG
+  Pipeline Deal Value: $0
+  AI Qualification Rationale: Lead does not meet ICP threshold. Personal email or non-commercial inquiry detected (alexk994@gmail.com).
+  Suggested First-Call Approach: "No sales rep action required."
+
+NOTIFICATION PLAIN TEXT OUTPUT:
+  Audit Log Text:
+[Audit Log] No sales alert dispatched for this lead. Disqualification recorded in CRM audit trail.
+
+HUBSPOT CRM V3 PAYLOADS (Copied from code output):
+  Contact Payload:
+{
+  "firstname": "Alex",
+  "lastname": "K",
+  "email": "alexk994@gmail.com",
+  "jobtitle": "Student / Intern",
+  "lifecyclestage": "lead",
+  "hs_lead_status": "UNQUALIFIED",
+  "ai_icp_score": 0,
+  "ai_icp_tier": "Tier 3 (Disqualified)",
+  "ai_qualification_notes": "Lead does not meet ICP threshold. Personal email or non-commercial inquiry detected (alexk994@gmail.com)."
+}
+  Company Payload:
+{
+  "name": "Freelance",
+  "domain": "gmail.com",
+  "industry": "Consumer / Independent",
+  "numberofemployees": "1",
+  "annualrevenue": "N/A",
+  "icp_fit_tier": "Tier 3 (Disqualified)",
+  "target_account": "false"
+}
+
+Enriched Data Object:
+{
+  "name": "Freelance",
+  "industry": "Consumer / Independent",
+  "employee_count": 1,
+  "employee_range": "1-5",
+  "estimated_annual_revenue": "N/A",
+  "headquarters": "N/A",
+  "tech_stack": []
+}
+================================================================================

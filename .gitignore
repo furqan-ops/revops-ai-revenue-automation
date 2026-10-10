@@ -18,3 +18,7 @@ $RECYCLE.BIN/
 
 # Logs
 *.log
+
+# Design reference
+design_reference/
+*.zip
