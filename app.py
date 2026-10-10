@@ -640,9 +640,9 @@ st.markdown("""
 
 # Scenario selection & form setup
 scenario_options = [
-    "Tier 1 example: Sarah Jenkins (VP of Revenue Operations)",
-    "Tier 2 example: David Miller (Marketing Manager)",
-    "Tier 3 example: Alex K (Student / Intern)"
+    "Tier 1: Enterprise Buyer — Sarah Jenkins (CloudScale Systems)",
+    "Tier 2: Mid-Market Prospect — David Miller (Growth Digital Agency)",
+    "Tier 3: Disqualified Inquiry — Alex K (Freelance / Personal Gmail)"
 ]
 
 # Track scenario selection to sync form fields

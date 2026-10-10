@@ -51,7 +51,7 @@ interface ScenarioData {
 
 const presetScenarios: Record<string, ScenarioData> = {
   tier1: {
-    label: 'Tier 1 example',
+    label: 'Tier 1: Enterprise Buyer (CloudScale Systems)',
     firstName: 'Sarah',
     lastName: 'Jenkins',
     email: 's.jenkins@cloudscale.io',
@@ -62,7 +62,7 @@ const presetScenarios: Record<string, ScenarioData> = {
     message: 'We are looking to overhaul our manual lead routing and automate CRM enrichment for our 25 sales reps. Budget approved for Q4.'
   },
   tier2: {
-    label: 'Tier 2 example',
+    label: 'Tier 2: Mid-Market Prospect (Growth Digital Agency)',
     firstName: 'David',
     lastName: 'Miller',
     email: 'david.m@growthdigital.co',
@@ -73,7 +73,7 @@ const presetScenarios: Record<string, ScenarioData> = {
     message: 'Evaluating automation tools to connect our forms to CRM. Looking for case studies and pricing details.'
   },
   tier3: {
-    label: 'Tier 3 example',
+    label: 'Tier 3: Disqualified Inquiry (Freelance / Personal Gmail)',
     firstName: 'Alex',
     lastName: 'K',
     email: 'alexk994@gmail.com',
@@ -433,9 +433,9 @@ export default function LeadScoringDashboard() {
                   value={selectedScenarioKey}
                   onChange={(event) => handleScenarioChange(event.target.value)}
                 >
-                  <option value="tier1">Tier 1 example</option>
-                  <option value="tier2">Tier 2 example</option>
-                  <option value="tier3">Tier 3 example</option>
+                  <option value="tier1">Tier 1: Enterprise Buyer (CloudScale Systems)</option>
+                  <option value="tier2">Tier 2: Mid-Market Prospect (Growth Digital Agency)</option>
+                  <option value="tier3">Tier 3: Disqualified Inquiry (Freelance / Personal Gmail)</option>
                 </select>
                 <ChevronDown aria-hidden="true" />
               </div>
