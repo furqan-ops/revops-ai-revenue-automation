@@ -1,9 +1,55 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { Check, ChevronDown, Link2 } from 'lucide-react'
+import { Check, ChevronDown, Download, Link2 } from 'lucide-react'
 
-const scenarios = {
+interface FirmographicInfo {
+  name: string
+  domain: string
+  industry: string
+  employee_count: number
+  employee_range: string
+  estimated_annual_revenue: string
+  headquarters: string
+  tech_stack: string[]
+}
+
+const firmographicsDb: Record<string, FirmographicInfo> = {
+  'cloudscale.io': {
+    name: 'CloudScale Systems',
+    domain: 'cloudscale.io',
+    industry: 'B2B Cloud Infrastructure & DevOps',
+    employee_count: 320,
+    employee_range: '250-500',
+    estimated_annual_revenue: '$45M',
+    headquarters: 'San Francisco, CA, USA',
+    tech_stack: ['AWS', 'Kubernetes', 'HubSpot', 'Slack', 'PostgreSQL', 'Datadog']
+  },
+  'growthdigital.co': {
+    name: 'Growth Digital Agency',
+    domain: 'growthdigital.co',
+    industry: 'Performance Marketing & Digital Services',
+    employee_count: 35,
+    employee_range: '20-50',
+    estimated_annual_revenue: '$3.8M',
+    headquarters: 'Austin, TX, USA',
+    tech_stack: ['WordPress', 'Google Analytics', 'Mailchimp', 'Zapier']
+  }
+}
+
+interface ScenarioData {
+  label: string
+  firstName: string
+  lastName: string
+  email: string
+  title: string
+  company: string
+  website: string
+  size: string
+  message: string
+}
+
+const presetScenarios: Record<string, ScenarioData> = {
   tier1: {
     label: 'Tier 1 example',
     firstName: 'Sarah',
@@ -13,26 +59,7 @@ const scenarios = {
     company: 'CloudScale Systems',
     website: 'https://cloudscale.io',
     size: '250-500',
-    message: 'Evaluating enterprise lead routing solutions for our sales team. Need CRM integration and automated Slack alerts.',
-    score: 98,
-    tier: 'Tier 1 (High)',
-    parts: [30, 28, 30, 10] as const,
-    deal_arr: '$45,000',
-    action: 'Tier 1 Slack alert',
-    enrichmentStep: 'Firmographics matched',
-    rationale: 'High-value prospect matching core ICP (CloudScale Systems, 320 employees). VP of Revenue Operations has direct decision authority and approved budget.',
-    approach: 'Focus on immediate ROI: explain how automated routing eliminates lead drop-off across their sales reps.',
-    enrichment: [
-      ['Company', 'CloudScale Systems'],
-      ['Industry', 'B2B Cloud Infrastructure & DevOps'],
-      ['Headcount', '320'],
-      ['Annual revenue', '$45M'],
-      ['Headquarters', 'San Francisco, CA, USA'],
-      ['Tech stack', 'AWS, Kubernetes, HubSpot, Slack, PostgreSQL, Datadog'],
-      ['Domain type', 'Corporate business domain']
-    ],
-    contact: '{\n  "firstname": "Sarah",\n  "lastname": "Jenkins",\n  "email": "s.jenkins@cloudscale.io",\n  "jobtitle": "VP of Revenue Operations",\n  "lifecyclestage": "salesqualifiedlead",\n  "hs_lead_status": "OPEN",\n  "ai_icp_score": 98,\n  "ai_icp_tier": "Tier 1 (High)",\n  "ai_qualification_notes": "High-value prospect matching core ICP (CloudScale Systems, 320 employees). VP of Revenue Operations has direct decision authority and approved budget."\n}',
-    companyRecord: '{\n  "name": "CloudScale Systems",\n  "domain": "cloudscale.io",\n  "industry": "B2B Cloud Infrastructure & DevOps",\n  "numberofemployees": "320",\n  "annualrevenue": "$45M",\n  "icp_fit_tier": "Tier 1 (High)",\n  "target_account": "true"\n}'
+    message: 'We are looking to overhaul our manual lead routing and automate CRM enrichment for our 25 sales reps. Budget approved for Q4.'
   },
   tier2: {
     label: 'Tier 2 example',
@@ -43,26 +70,7 @@ const scenarios = {
     company: 'Growth Digital Agency',
     website: 'https://growthdigital.co',
     size: '20-50',
-    message: 'Evaluating automation tools to connect our forms to CRM. Looking for case studies and pricing details.',
-    score: 63,
-    tier: 'Tier 2 (Medium)',
-    parts: [20, 18, 20, 5] as const,
-    deal_arr: '$10,000',
-    action: 'Tier 2 SDR queue alert',
-    enrichmentStep: 'Firmographics matched',
-    rationale: 'Moderate fit from Growth Digital Agency (Performance Marketing & Digital Services, 20-50 employees). Evaluating options and fits MQL criteria.',
-    approach: 'Provide relevant B2B case studies and offer a guided architecture walkthrough.',
-    enrichment: [
-      ['Company', 'Growth Digital Agency'],
-      ['Industry', 'Performance Marketing & Digital Services'],
-      ['Headcount', '35'],
-      ['Annual revenue', '$3.8M'],
-      ['Headquarters', 'Austin, TX, USA'],
-      ['Tech stack', 'WordPress, Google Analytics, Mailchimp, Zapier'],
-      ['Domain type', 'Corporate business domain']
-    ],
-    contact: '{\n  "firstname": "David",\n  "lastname": "Miller",\n  "email": "david.m@growthdigital.co",\n  "jobtitle": "Marketing Manager",\n  "lifecyclestage": "marketingqualifiedlead",\n  "hs_lead_status": "IN_PROGRESS",\n  "ai_icp_score": 63,\n  "ai_icp_tier": "Tier 2 (Medium)",\n  "ai_qualification_notes": "Moderate fit from Growth Digital Agency (Performance Marketing & Digital Services, 20-50 employees). Evaluating options and fits MQL criteria."\n}',
-    companyRecord: '{\n  "name": "Growth Digital Agency",\n  "domain": "growthdigital.co",\n  "industry": "Performance Marketing & Digital Services",\n  "numberofemployees": "35",\n  "annualrevenue": "$3.8M",\n  "icp_fit_tier": "Tier 2 (Medium)",\n  "target_account": "false"\n}'
+    message: 'Evaluating automation tools to connect our forms to CRM. Looking for case studies and pricing details.'
   },
   tier3: {
     label: 'Tier 3 example',
@@ -73,30 +81,175 @@ const scenarios = {
     company: 'Freelance',
     website: '',
     size: '1-5',
-    message: 'Hey, I am doing research on revops automation and want to test how your system works for my class project.',
-    score: 0,
-    tier: 'Tier 3 (Disqualified)',
-    parts: [0, 0, 0, 0] as const,
-    deal_arr: '$0',
-    action: 'Internal audit log',
-    enrichmentStep: 'Fallback profile used',
-    rationale: 'Lead does not meet ICP threshold. Personal email or non-commercial inquiry detected (alexk994@gmail.com).',
-    approach: 'No sales rep action required.',
-    enrichment: [
-      ['Company', 'Freelance'],
-      ['Industry', 'Consumer / Independent'],
-      ['Headcount', '1'],
-      ['Annual revenue', 'N/A'],
-      ['Headquarters', 'N/A'],
-      ['Tech stack', 'None detected'],
-      ['Domain type', 'Consumer email']
-    ],
-    contact: '{\n  "firstname": "Alex",\n  "lastname": "K",\n  "email": "alexk994@gmail.com",\n  "jobtitle": "Student / Intern",\n  "lifecyclestage": "lead",\n  "hs_lead_status": "UNQUALIFIED",\n  "ai_icp_score": 0,\n  "ai_icp_tier": "Tier 3 (Disqualified)",\n  "ai_qualification_notes": "Lead does not meet ICP threshold. Personal email or non-commercial inquiry detected (alexk994@gmail.com)."\n}',
-    companyRecord: '{\n  "name": "Freelance",\n  "domain": "gmail.com",\n  "industry": "Consumer / Independent",\n  "numberofemployees": "1",\n  "annualrevenue": "N/A",\n  "icp_fit_tier": "Tier 3 (Disqualified)",\n  "target_account": "false"\n}'
+    message: 'Do you offer free access or student discounts for educational projects?'
   }
-} as const
+}
 
-type ScenarioKey = keyof typeof scenarios
+interface ScoringResult {
+  score: number
+  tier: string
+  tierClass: string
+  f_score: number
+  a_score: number
+  p_score: number
+  b_score: number
+  rationale: string
+  approach: string
+  deal_arr: string
+  action: string
+  enrichmentStep: string
+  enrichmentRows: [string, string][]
+  contactPayload: Record<string, unknown>
+  companyPayload: Record<string, unknown>
+  sdrQueueText: string
+  auditLogText: string
+  latencyMs: number
+}
+
+function evaluateLead(input: ScenarioData): ScoringResult {
+  const startTime = performance.now()
+  const emailClean = input.email.trim().toLowerCase()
+  const emailDomain = emailClean.includes('@') ? emailClean.split('@')[1] : ''
+  const freeDomains = ['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com']
+  const isFree = freeDomains.includes(emailDomain)
+
+  const enriched: FirmographicInfo = firmographicsDb[emailDomain] || {
+    name: input.company || (isFree ? 'Freelance' : 'Individual Account'),
+    domain: emailDomain || 'N/A',
+    industry: isFree ? 'Consumer / Independent' : 'General Commercial Technology',
+    employee_count: isFree ? 1 : 35,
+    employee_range: isFree ? '1-5' : input.size || '1-5',
+    estimated_annual_revenue: isFree ? 'N/A' : '$3.5M',
+    headquarters: isFree ? 'N/A' : 'Global Remote',
+    tech_stack: isFree ? [] : ['HubSpot', 'Cloud Services']
+  }
+
+  // Dimension 1: Firmographic
+  let f_score = 0
+  if (isFree) {
+    f_score = 0
+  } else if (enriched.employee_count >= 100) {
+    f_score = 30
+  } else if (enriched.employee_count >= 20) {
+    f_score = 20
+  } else {
+    f_score = 5
+  }
+
+  // Dimension 2: Authority
+  const titleLower = input.title.toLowerCase()
+  let a_score = 10
+  if (['vp', 'vice president', 'chief', 'director', 'head'].some(k => titleLower.includes(k))) {
+    a_score = 30
+  } else if (['manager', 'lead'].some(k => titleLower.includes(k))) {
+    a_score = 20
+  } else if (['student', 'intern'].some(k => titleLower.includes(k))) {
+    a_score = 0
+  }
+
+  // Dimension 3: Problem
+  const msgLower = input.message.toLowerCase()
+  let p_score = 10
+  if (['lead routing', 'overhaul', 'sales reps', 'enrichment'].some(k => msgLower.includes(k))) {
+    p_score = 28
+  } else if (['evaluating', 'pricing', 'case studies'].some(k => msgLower.includes(k))) {
+    p_score = 18
+  } else if (['free', 'student', 'discount'].some(k => msgLower.includes(k))) {
+    p_score = 0
+  }
+
+  // Dimension 4: Budget
+  let b_score = 0
+  if (['budget approved', 'q4', 'immediate'].some(k => msgLower.includes(k))) {
+    b_score = 10
+  } else if (msgLower.includes('evaluating')) {
+    b_score = 5
+  }
+
+  const totalScore = Math.min(100, f_score + a_score + p_score + b_score)
+
+  let tier = 'Tier 3 (Disqualified)'
+  let tierClass = 'tier-3'
+  let action = 'Internal audit log'
+  let rationale = `Lead does not meet ICP threshold. Personal email or non-commercial inquiry detected (${input.email}).`
+  let approach = 'No sales rep action required.'
+  let deal_arr = '$0'
+
+  if (totalScore >= 80) {
+    tier = 'Tier 1 (High)'
+    tierClass = 'tier-1'
+    action = 'Tier 1 Slack alert'
+    rationale = `High-value prospect matching core ICP (${enriched.name}, ${enriched.employee_count} employees). ${input.title} has direct decision authority and approved budget.`
+    approach = 'Focus on immediate ROI: explain how automated routing eliminates lead drop-off across their sales reps.'
+    deal_arr = `$${(enriched.employee_count * 120).toLocaleString()} ARR`
+  } else if (totalScore >= 50) {
+    tier = 'Tier 2 (Medium)'
+    tierClass = 'tier-2'
+    action = 'Tier 2 SDR queue alert'
+    rationale = `Moderate fit from ${enriched.name} (${enriched.industry}, ${enriched.employee_range} employees). Evaluating options and fits MQL criteria.`
+    approach = 'Provide relevant B2B case studies and offer a guided architecture walkthrough.'
+    deal_arr = '$0 (In Nurture)'
+  }
+
+  const contactPayload = {
+    firstname: input.firstName,
+    lastname: input.lastName,
+    email: input.email,
+    jobtitle: input.title,
+    lifecyclestage: totalScore >= 80 ? 'salesqualifiedlead' : totalScore >= 50 ? 'marketingqualifiedlead' : 'lead',
+    hs_lead_status: totalScore >= 80 ? 'OPEN' : totalScore >= 50 ? 'IN_PROGRESS' : 'UNQUALIFIED',
+    ai_icp_score: totalScore,
+    ai_icp_tier: tier,
+    ai_qualification_notes: rationale
+  }
+
+  const companyPayload = {
+    name: enriched.name,
+    domain: emailDomain,
+    industry: enriched.industry,
+    numberofemployees: String(enriched.employee_count),
+    annualrevenue: enriched.estimated_annual_revenue,
+    icp_fit_tier: tier,
+    target_account: totalScore >= 80 ? 'true' : 'false'
+  }
+
+  const enrichmentRows: [string, string][] = [
+    ['Company', enriched.name],
+    ['Industry', enriched.industry],
+    ['Headcount', String(enriched.employee_count)],
+    ['Annual revenue', enriched.estimated_annual_revenue],
+    ['Headquarters', enriched.headquarters],
+    ['Tech stack', enriched.tech_stack.length > 0 ? enriched.tech_stack.join(', ') : 'None detected'],
+    ['Domain type', isFree ? 'Consumer email' : 'Corporate business domain']
+  ]
+
+  const sdrQueueText = '[SDR QUEUE - TIER 2] Assigned to general SDR inbound triage pool. Notification routed to SDR lead view. Manual touchpoint required within 4 business hours.'
+  const auditLogText = `[AUDIT LOG - TIER 3] Lead disqualified automatically (Consumer email / Out of ICP). Reason: Lead does not meet ICP threshold. Personal email or non-commercial inquiry detected (${input.email}). Routing skipped.`
+
+  const endTime = performance.now()
+  const latencyMs = Number((endTime - startTime).toFixed(2))
+
+  return {
+    score: totalScore,
+    tier,
+    tierClass,
+    f_score,
+    a_score,
+    p_score,
+    b_score,
+    rationale,
+    approach,
+    deal_arr,
+    action,
+    enrichmentStep: isFree ? 'Fallback profile used' : 'Firmographics matched',
+    enrichmentRows,
+    contactPayload,
+    companyPayload,
+    sdrQueueText,
+    auditLogText,
+    latencyMs
+  }
+}
 
 function TierPill({ tier }: { tier: string }) {
   const tierKey = tier.includes('Tier 1') ? 'tier-1' : tier.includes('Tier 2') ? 'tier-2' : 'tier-3'
@@ -104,20 +257,57 @@ function TierPill({ tier }: { tier: string }) {
 }
 
 export default function LeadScoringDashboard() {
-  const [scenarioKey, setScenarioKey] = useState<ScenarioKey>('tier1')
+  const [selectedScenarioKey, setSelectedScenarioKey] = useState<string>('tier1')
+  const [formData, setFormData] = useState<ScenarioData>(presetScenarios.tier1)
   const [activeTab, setActiveTab] = useState('Company enrichment')
   const [running, setRunning] = useState(false)
   const [hasRun, setHasRun] = useState(false)
   const [completed, setCompleted] = useState(0)
+  const [result, setResult] = useState<ScoringResult | null>(null)
+  const [errors, setErrors] = useState<{ firstName?: string; lastName?: string; email?: string; message?: string }>({})
 
-  const data = scenarios[scenarioKey]
   const todayDate = useMemo(() => {
     return new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
   }, [])
 
+  function handleScenarioChange(key: string) {
+    setSelectedScenarioKey(key)
+    if (presetScenarios[key]) {
+      setFormData(presetScenarios[key])
+      setErrors({})
+    }
+  }
+
+  function handleFieldChange(field: keyof ScenarioData, value: string) {
+    setFormData(prev => ({ ...prev, [field]: value }))
+    if (errors[field as keyof typeof errors]) {
+      setErrors(prev => ({ ...prev, [field]: undefined }))
+    }
+  }
+
+  function validate(): boolean {
+    const nextErrors: { firstName?: string; lastName?: string; email?: string; message?: string } = {}
+    if (!formData.firstName.trim()) nextErrors.firstName = 'First name is required.'
+    if (!formData.lastName.trim()) nextErrors.lastName = 'Last name is required.'
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(formData.email.trim())) {
+      nextErrors.email = 'Work email must contain "@" followed by a domain.'
+    }
+    if (!formData.message.trim()) nextErrors.message = 'Inbound message is required.'
+
+    setErrors(nextErrors)
+    return Object.keys(nextErrors).length === 0
+  }
+
   function runScoring() {
+    if (!validate()) return
+
     setRunning(true)
     setCompleted(0)
+
+    const evaluated = evaluateLead(formData)
+    setResult(evaluated)
+
     let step = 0
     const interval = window.setInterval(() => {
       step += 1
@@ -127,15 +317,15 @@ export default function LeadScoringDashboard() {
         setRunning(false)
         setHasRun(true)
       }
-    }, 200)
+    }, 180)
   }
 
   const pipelineStatusTexts = [
     hasRun ? 'Lead received' : 'Waiting',
-    hasRun ? data.enrichmentStep : 'Waiting',
-    hasRun ? `Score ${data.score}` : 'Waiting',
+    hasRun && result ? result.enrichmentStep : 'Waiting',
+    hasRun && result ? `Score ${result.score}` : 'Waiting',
     hasRun ? 'Payloads built' : 'Waiting',
-    hasRun ? data.action : 'Waiting'
+    hasRun && result ? result.action : 'Waiting'
   ]
 
   return (
@@ -172,7 +362,7 @@ export default function LeadScoringDashboard() {
           </article>
           <article className="stat-card stat-card-2">
             <p>Scoring time</p>
-            <strong>1.18 ms</strong>
+            <strong>{result ? `${result.latencyMs.toFixed(2)} ms` : '1.18 ms'}</strong>
             <span>Measured locally</span>
           </article>
           <article className="stat-card stat-card-3">
@@ -188,7 +378,29 @@ export default function LeadScoringDashboard() {
               <p className="eyebrow">Workflow status</p>
               <h2 id="pipeline-heading">Pipeline status</h2>
             </div>
-            <span className="run-label">{running ? 'Scoring in progress' : hasRun ? 'Completed' : 'Ready'}</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <span className="run-label">{running ? 'Scoring in progress' : hasRun ? 'Completed' : 'Ready'}</span>
+              <a
+                href="/master_revops_pipeline.json"
+                download="master_revops_pipeline.json"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '6px 10px',
+                  borderRadius: '6px',
+                  border: '1px solid #d1d5db',
+                  background: '#ffffff',
+                  color: '#374151',
+                  fontSize: '12px',
+                  fontWeight: 500,
+                  textDecoration: 'none'
+                }}
+              >
+                <Download style={{ width: '13px', height: '13px' }} aria-hidden="true" />
+                Workflow JSON
+              </a>
+            </div>
           </div>
           <div className="steps">
             {['Inbound intake', 'Enrichment', 'AI scoring', 'CRM sync', 'Routing and alerts'].map((step, index) => (
@@ -218,10 +430,8 @@ export default function LeadScoringDashboard() {
               <span>Scenario</span>
               <div className="select-wrap">
                 <select
-                  value={scenarioKey}
-                  onChange={(event) => {
-                    setScenarioKey(event.target.value as ScenarioKey)
-                  }}
+                  value={selectedScenarioKey}
+                  onChange={(event) => handleScenarioChange(event.target.value)}
                 >
                   <option value="tier1">Tier 1 example</option>
                   <option value="tier2">Tier 2 example</option>
@@ -231,27 +441,85 @@ export default function LeadScoringDashboard() {
               </div>
             </label>
             <div className="form-grid">
-              {[
-                ['First name', data.firstName],
-                ['Last name', data.lastName],
-                ['Work email', data.email],
-                ['Job title', data.title],
-                ['Company name', data.company],
-                ['Website', data.website],
-                ['Company size', data.size]
-              ].map(([label, value]) => (
-                <label className="field" key={label}>
-                  <span>{label}</span>
-                  <input value={value} readOnly />
-                </label>
-              ))}
+              <label className="field">
+                <span>First name</span>
+                <input
+                  value={formData.firstName}
+                  onChange={(e) => handleFieldChange('firstName', e.target.value)}
+                />
+                {errors.firstName && <span style={{ color: '#dc2626', fontSize: '11px' }}>{errors.firstName}</span>}
+              </label>
+
+              <label className="field">
+                <span>Last name</span>
+                <input
+                  value={formData.lastName}
+                  onChange={(e) => handleFieldChange('lastName', e.target.value)}
+                />
+                {errors.lastName && <span style={{ color: '#dc2626', fontSize: '11px' }}>{errors.lastName}</span>}
+              </label>
+
+              <label className="field">
+                <span>Work email</span>
+                <input
+                  value={formData.email}
+                  onChange={(e) => handleFieldChange('email', e.target.value)}
+                />
+                {errors.email && <span style={{ color: '#dc2626', fontSize: '11px' }}>{errors.email}</span>}
+              </label>
+
+              <label className="field">
+                <span>Job title</span>
+                <input
+                  value={formData.title}
+                  onChange={(e) => handleFieldChange('title', e.target.value)}
+                />
+              </label>
+
+              <label className="field">
+                <span>Company name</span>
+                <input
+                  value={formData.company}
+                  onChange={(e) => handleFieldChange('company', e.target.value)}
+                />
+              </label>
+
+              <label className="field">
+                <span>Website</span>
+                <input
+                  value={formData.website}
+                  onChange={(e) => handleFieldChange('website', e.target.value)}
+                />
+              </label>
+
+              <label className="field">
+                <span>Company size</span>
+                <input
+                  value={formData.size}
+                  onChange={(e) => handleFieldChange('size', e.target.value)}
+                />
+              </label>
+
               <label className="field full">
                 <span>Inbound message</span>
-                <textarea value={data.message} readOnly rows={3} />
+                <textarea
+                  value={formData.message}
+                  onChange={(e) => handleFieldChange('message', e.target.value)}
+                  rows={3}
+                />
+                {errors.message && <span style={{ color: '#dc2626', fontSize: '11px' }}>{errors.message}</span>}
               </label>
             </div>
             <div className="action-row">
-              <span className="form-note">Inputs are validated before scoring.</span>
+              <span className="form-note">
+                {Object.keys(errors).length > 0 ? (
+                  <span style={{ color: '#dc2626' }}>Please fix the errors above before scoring.</span>
+                ) : hasRun ? (
+                  <span style={{ color: '#047857' }}>All inputs valid</span>
+                ) : (
+                  'Inputs are validated before scoring.'
+                )}
+              </span>
               <button className="primary-button" onClick={runScoring} disabled={running}>
                 {running ? 'Running…' : 'Run scoring'}
               </button>
@@ -267,7 +535,7 @@ export default function LeadScoringDashboard() {
               <span className="muted-label">Rule-based scoring</span>
             </div>
 
-            {!hasRun ? (
+            {!hasRun || !result ? (
               <div style={{ textAlign: 'center', color: '#6b7280', padding: '64px 20px' }}>
                 <p style={{ margin: 0, fontSize: '13px' }}>Select a lead and run scoring to see the result.</p>
               </div>
@@ -275,17 +543,17 @@ export default function LeadScoringDashboard() {
               <>
                 <div className="score-header">
                   <div className="score-value">
-                    <strong>{data.score}</strong>
+                    <strong>{result.score}</strong>
                     <span>/ 100</span>
                   </div>
-                  <TierPill tier={data.tier} />
+                  <TierPill tier={result.tier} />
                 </div>
                 <div className="breakdown">
                   {[
-                    ['Firmographic fit', data.parts[0], 30],
-                    ['Persona and authority', data.parts[1], 30],
-                    ['Problem alignment', data.parts[2], 30],
-                    ['Budget and timing', data.parts[3], 10]
+                    ['Firmographic fit', result.f_score, 30],
+                    ['Persona and authority', result.a_score, 30],
+                    ['Problem alignment', result.p_score, 30],
+                    ['Budget and timing', result.b_score, 10]
                   ].map(([label, value, max]) => (
                     <div className="score-row" key={label}>
                       <div className="score-row-label">
@@ -302,11 +570,11 @@ export default function LeadScoringDashboard() {
                 </div>
                 <div className="rationale">
                   <h3>Rationale</h3>
-                  <p>{data.rationale}</p>
+                  <p>{result.rationale}</p>
                 </div>
                 <div className="approach">
                   <h3>Suggested first-call approach</h3>
-                  <p>{data.approach}</p>
+                  <p>{result.approach}</p>
                 </div>
               </>
             )}
@@ -328,7 +596,7 @@ export default function LeadScoringDashboard() {
             ))}
           </div>
           <div className="tab-panel">
-            {!hasRun ? (
+            {!hasRun || !result ? (
               <div style={{ textAlign: 'center', color: '#6b7280', padding: '36px 24px' }}>
                 <p style={{ margin: 0, fontSize: '13px' }}>Run scoring to see results here.</p>
               </div>
@@ -336,7 +604,7 @@ export default function LeadScoringDashboard() {
               <>
                 {activeTab === 'Company enrichment' && (
                   <div className="enrichment-table">
-                    {data.enrichment.map(([label, value]) => (
+                    {result.enrichmentRows.map(([label, value]) => (
                       <div className="table-row" key={label}>
                         <span>{label}</span>
                         <b>{value}</b>
@@ -350,14 +618,14 @@ export default function LeadScoringDashboard() {
                       <CodePanel
                         title="Contact"
                         endpoint="/crm/v3/objects/contacts"
-                        content={data.contact}
-                        count="12 properties"
+                        content={JSON.stringify(result.contactPayload, null, 2)}
+                        count={`${Object.keys(result.contactPayload).length} properties`}
                       />
                       <CodePanel
                         title="Company"
                         endpoint="/crm/v3/objects/companies"
-                        content={data.companyRecord}
-                        count="9 properties"
+                        content={JSON.stringify(result.companyPayload, null, 2)}
+                        count={`${Object.keys(result.companyPayload).length} properties`}
                       />
                     </div>
                     <p className="association">
@@ -365,7 +633,9 @@ export default function LeadScoringDashboard() {
                     </p>
                   </>
                 )}
-                {activeTab === 'Slack alert' && <SlackPreview data={data} />}
+                {activeTab === 'Slack alert' && (
+                  <SlackPreview result={result} formData={formData} />
+                )}
               </>
             )}
           </div>
@@ -404,8 +674,8 @@ function CodePanel({
   )
 }
 
-function SlackPreview({ data }: { data: (typeof scenarios)[ScenarioKey] }) {
-  if (data.score >= 80) {
+function SlackPreview({ result, formData }: { result: ScoringResult; formData: ScenarioData }) {
+  if (result.score >= 80) {
     return (
       <div className="slack-message">
         <div className="slack-top">
@@ -414,16 +684,16 @@ function SlackPreview({ data }: { data: (typeof scenarios)[ScenarioKey] }) {
         </div>
         <div className="slack-body">
           <p>
-            <strong>[ALERT] New {data.tier} lead:</strong> {data.firstName} {data.lastName} at {data.company}
+            <strong>[ALERT] New {result.tier} lead:</strong> {formData.firstName} {formData.lastName} at {formData.company}
           </p>
           <p>
-            <strong>Score:</strong> {data.score}/100 &middot; <strong>Role:</strong> {data.title}
+            <strong>Score:</strong> {result.score}/100 &middot; <strong>Role:</strong> {formData.title}
           </p>
           <p>
-            <strong>Projected ARR:</strong> {data.deal_arr} &middot; <strong>Assigned AE:</strong> Alex Vance (Round-Robin)
+            <strong>Projected ARR:</strong> {result.deal_arr} &middot; <strong>Assigned AE:</strong> Alex Vance (Round-Robin)
           </p>
           <p>
-            <em>&quot;{data.approach}&quot;</em>
+            <em>&quot;{result.approach}&quot;</em>
           </p>
           <a className="slack-link" href="#records">
             View deal in HubSpot CRM (#hs_deal_894129)
@@ -433,21 +703,17 @@ function SlackPreview({ data }: { data: (typeof scenarios)[ScenarioKey] }) {
     )
   }
 
-  if (data.score >= 50) {
+  if (result.score >= 50) {
     return (
       <div className="slack-empty">
-        <span>
-          [SDR QUEUE - TIER 2] Assigned to general SDR inbound triage pool. Notification routed to SDR lead view. Manual touchpoint required within 4 business hours.
-        </span>
+        <span>{result.sdrQueueText}</span>
       </div>
     )
   }
 
   return (
     <div className="slack-empty">
-      <span>
-        [AUDIT LOG - TIER 3] Lead disqualified automatically (Consumer email / Out of ICP). Reason: Lead does not meet ICP threshold. Personal email or non-commercial inquiry detected ({data.email}). Routing skipped.
-      </span>
+      <span>{result.auditLogText}</span>
     </div>
   )
 }
